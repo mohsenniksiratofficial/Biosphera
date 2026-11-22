@@ -1610,6 +1610,80 @@ kbd {
   color: var(--ink-muted);
 }
 
+.seed-row {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 8px;
+}
+
+.seed-row input[type='text'] {
+  flex: 1;
+  min-width: 0;
+  background: var(--panel-input-bg, rgba(255, 255, 255, 0.06));
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--ink);
+  padding: 6px 8px;
+  font: inherit;
+  font-size: 12px;
+}
+
+/* A/B comparison */
+.ab-setup .setting-row {
+  margin-bottom: 12px;
+}
+
+#ab-modal select,
+#ab-modal input[type='text'] {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--ink);
+  padding: 6px 8px;
+  font: inherit;
+  font-size: 12px;
+}
+
+.ab-legend {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 11.5px;
+  margin-bottom: 8px;
+}
+
+.ab-key::before {
+  content: '';
+  display: inline-block;
+  width: 14px;
+  height: 3px;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+
+.ab-key-a::before { background: #5aa9e6; }
+.ab-key-b::before { background: #f4a259; }
+
+.ab-clock {
+  margin-left: auto;
+  color: var(--ink-muted);
+}
+
+#ab-chart {
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.ab-verdict {
+  margin-top: 10px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
 /* ==========================================================================
    Utility
    ========================================================================== */

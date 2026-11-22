@@ -5,6 +5,7 @@
  */
 
 import { openModal, closeModal } from './dom.js';
+import { getSeed, randomSeedString } from '../engine/rng.js';
 
 const DEFAULTS = {
   capacity: 160,
@@ -15,11 +16,12 @@ const DEFAULTS = {
 };
 
 export class WorldSettings {
-  constructor(modalId, world, dayNight, onChange) {
+  constructor(modalId, world, dayNight, onChange, onRestart = null) {
     this.modal = document.getElementById(modalId);
     this.world = world;
     this.dayNight = dayNight;
     this.onChange = onChange;
+    this.onRestart = onRestart;
 
     this.inputs = {
       capacity: document.getElementById('set-capacity'),
@@ -58,6 +60,23 @@ export class WorldSettings {
     for (const key of Object.keys(this.inputs)) {
       this.inputs[key]?.addEventListener('input', () => this.apply());
     }
+
+    const seedInput = document.getElementById('set-seed');
+    document.getElementById('btn-seed-new')?.addEventListener('click', () => {
+      if (seedInput) seedInput.value = randomSeedString();
+    });
+    document.getElementById('btn-seed-apply')?.addEventListener('click', () => {
+      const seedText = seedInput ? seedInput.value.trim() : '';
+      const seed = seedText === '' ? null : seedText;
+      const live = {
+        capacity: this.world.maxPopulationCap,
+        foodCap: this.world.maxFoodCap,
+        mutation: this.world.mutationScale ?? 1,
+        current: this.world.currentStrength,
+        dayLength: this.dayNight ? this.dayNight.cycleDuration : DEFAULTS.dayLength
+      };
+      this.onRestart?.(seed, live);
+    });
   }
 
   /** Read the current control values (or a supplied preset) and push them into the world. */
@@ -111,6 +130,11 @@ export class WorldSettings {
     };
     this.syncInputs(live);
     this.updateOutputs(live);
+    const seedInput = document.getElementById('set-seed');
+    const seedOut = document.getElementById('out-seed');
+    const s = this.world.rngChannel ? getSeed(this.world.rngChannel) : getSeed();
+    if (seedInput) seedInput.value = s === null ? '' : String(s);
+    if (seedOut) seedOut.textContent = s === null ? 'random' : String(s);
     openModal(this.modal);
   }
 }

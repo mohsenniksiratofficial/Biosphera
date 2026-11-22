@@ -10,6 +10,7 @@ import { Organism } from '../entities/Organism.js';
 import { Food } from '../entities/Food.js';
 import { Hazard } from '../entities/Hazard.js';
 import { wrapDelta } from './wrapDelta.js';
+import { simRandom } from './rng.js';
 import { openModal, closeModal } from '../ui/dom.js';
 
 export class ArenaTrial {
@@ -95,7 +96,7 @@ export class ArenaTrial {
     this.world.foods = [];
     for (let i = 0; i < 22; i++) {
       const angle = (i / 22) * Math.PI * 2;
-      const dist = 100 + Math.random() * 90;
+      const dist = 100 + simRandom() * 90;
       this.world.foods.push(new Food(320 + Math.cos(angle) * dist, 200 + Math.sin(angle) * dist, 'plant'));
     }
   }
@@ -105,7 +106,7 @@ export class ArenaTrial {
     this.world.hazards.push(new Hazard(400, 250, 50, 40));
     // Re-seed some food near hazards
     for (let i = 0; i < 15; i++) {
-      this.world.foods.push(new Food(240 + Math.random() * 160, 140 + Math.random() * 120, 'plant'));
+      this.world.foods.push(new Food(240 + simRandom() * 160, 140 + simRandom() * 120, 'plant'));
     }
   }
 

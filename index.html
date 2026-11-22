@@ -231,6 +231,10 @@
             <svg class="icon" aria-hidden="true"><use href="#i-sliders"/></svg>
             <span class="btn-label">World</span>
           </button>
+          <button id="btn-ab-test" class="btn btn-icon-action" title="A/B test: same seed, one rule changed" aria-label="Open A/B comparison">
+            <svg class="icon" aria-hidden="true"><use href="#i-flask"/></svg>
+            <span class="btn-label">A/B Test</span>
+          </button>
         </div>
 
         <div class="action-cluster">
@@ -639,11 +643,53 @@
               <input type="range" id="set-day-length" min="30" max="240" step="5" value="85" />
               <span class="setting-hint">Seconds per full day/night cycle.</span>
             </div>
+            <div class="setting-row">
+              <label for="set-seed">World seed</label>
+              <output id="out-seed" for="set-seed">random</output>
+              <div class="seed-row">
+                <input type="text" id="set-seed" inputmode="text" autocomplete="off" spellcheck="false" placeholder="e.g. reef-42" />
+                <button id="btn-seed-new" class="btn btn-secondary" type="button">New</button>
+              </div>
+              <span class="setting-hint">Type a seed and press Apply to restart this world deterministically. Same seed, same evolution.</span>
+              <button id="btn-seed-apply" class="btn btn-primary" type="button">Apply &amp; restart</button>
+            </div>
           </div>
         </div>
         <div class="modal-footer">
           <button id="btn-settings-reset" class="btn btn-secondary">Reset defaults</button>
           <button id="btn-settings-done" class="btn btn-primary">Done</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- A/B Comparison Modal -->
+    <div id="ab-modal" class="modal-backdrop" style="display: none;">
+      <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="ab-title">
+        <div class="modal-header">
+          <h3 id="ab-title">A/B Comparison</h3>
+          <button id="btn-close-ab" class="btn-icon" aria-label="Close A/B comparison"><svg class="icon" aria-hidden="true"><use href="#i-x"/></svg></button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-desc">Run two worlds from the same seed side by side. World B gets one changed rule; everything else is identical. The headless run advances as your live world runs and takes about two minutes of sim time.</p>
+          <div class="ab-setup" id="ab-setup">
+            <div class="setting-row">
+              <label for="ab-variant">Changed rule (World B)</label>
+              <select id="ab-variant"></select>
+              <span class="setting-hint">World A keeps the current rules as the baseline.</span>
+            </div>
+            <div class="setting-row">
+              <label for="ab-seed">Shared seed</label>
+              <input type="text" id="ab-seed" inputmode="text" autocomplete="off" spellcheck="false" placeholder="random" />
+              <span class="setting-hint">Leave blank for a fresh random seed shared by both worlds.</span>
+            </div>
+            <button id="btn-ab-start" class="btn btn-primary" type="button">Start experiment</button>
+          </div>
+          <div id="ab-progress" style="display: none;">
+            <div class="ab-legend"><span class="ab-key ab-key-a">A — baseline</span><span class="ab-key ab-key-b">B — <span id="ab-b-label"></span></span><span id="ab-clock" class="ab-clock">0s / 120s</span></div>
+            <canvas id="ab-chart" width="560" height="220" aria-label="Population over time for worlds A and B"></canvas>
+            <div id="ab-verdict" class="ab-verdict" role="status"></div>
+            <button id="btn-ab-again" class="btn btn-secondary" type="button" style="display:none">New experiment</button>
+          </div>
         </div>
       </div>
     </div>

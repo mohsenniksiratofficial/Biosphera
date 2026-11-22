@@ -2,6 +2,8 @@
  * Biosphera - Lightweight Feedforward Neural Network for Evolution
  */
 
+import { simRandom } from '../engine/rng.js';
+
 export const DEFAULT_BRAIN_TOPOLOGY = {
   inputs: 9, // 7 sensory + bias + pheromone scent
   hiddens: [7],
@@ -36,10 +38,10 @@ export class NeuralNet {
       for (let to = 0; to < toSize; to++) {
         const neuronWeights = new Float32Array(fromSize);
         for (let from = 0; from < fromSize; from++) {
-          neuronWeights[from] = (Math.random() * 2 - 1) * scale;
+          neuronWeights[from] = (simRandom() * 2 - 1) * scale;
         }
         layerWeights.push(neuronWeights);
-        layerBiases[to] = (Math.random() * 2 - 1) * 0.1;
+        layerBiases[to] = (simRandom() * 2 - 1) * 0.1;
       }
 
       this.weights.push(layerWeights);
@@ -84,16 +86,16 @@ export class NeuralNet {
       for (let j = 0; j < layerWeights.length; j++) {
         const neuronWeights = layerWeights[j];
         for (let k = 0; k < neuronWeights.length; k++) {
-          if (Math.random() < mutationRate) {
-            const delta = (Math.random() * 2 - 1 + Math.random() * 2 - 1) * 0.5 * mutationPower;
+          if (simRandom() < mutationRate) {
+            const delta = (simRandom() * 2 - 1 + simRandom() * 2 - 1) * 0.5 * mutationPower;
             neuronWeights[k] += delta;
             if (neuronWeights[k] > 3) neuronWeights[k] = 3;
             else if (neuronWeights[k] < -3) neuronWeights[k] = -3;
           }
         }
 
-        if (Math.random() < mutationRate) {
-          layerBiases[j] += (Math.random() * 2 - 1) * mutationPower;
+        if (simRandom() < mutationRate) {
+          layerBiases[j] += (simRandom() * 2 - 1) * mutationPower;
           if (layerBiases[j] > 2) layerBiases[j] = 2;
           else if (layerBiases[j] < -2) layerBiases[j] = -2;
         }

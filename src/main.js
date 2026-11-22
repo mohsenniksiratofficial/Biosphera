@@ -24,6 +24,7 @@ import { HallOfFame } from './engine/HallOfFame.js';
 import { EvolutionChart } from './ui/EvolutionChart.js';
 import { Minimap } from './ui/Minimap.js';
 import { WorldSettings } from './ui/WorldSettings.js';
+import { ABPanel } from './ui/ABPanel.js';
 import { WorldIO } from './engine/WorldIO.js';
 import { setIcon, setLabel, setPressed, setupModalDismissal, isModalOpen, openModal, closeModal } from './ui/dom.js';
 
@@ -53,7 +54,14 @@ class BiospheraApp {
 
     // 2b. Whole-biome map + live world rules
     this.minimap = new Minimap('minimap-canvas', this.world, this.camera, this.canvas, 'minimap-panel');
-    this.settings = new WorldSettings('settings-modal', this.world, this.dayNight, () => this.syncToggleButtons());
+    this.settings = new WorldSettings('settings-modal', this.world, this.dayNight, () => this.syncToggleButtons(), (seed, live) => {
+      this.world.restartWithSeed(seed);
+      this.world.maxPopulationCap = Math.round(live.capacity);
+      this.world.maxFoodCap = Math.round(live.foodCap);
+      this.world.mutationScale = live.mutation;
+      this.world.currentStrength = live.current;
+      this.controls.showToast(seed === null ? 'World restarted with a random seed.' : `World restarted from seed "${seed}".`);
+    });
 
     // 3. UI Modules & Controls
     this.inspector = new Inspector('inspector-panel');
@@ -433,6 +441,7 @@ class BiospheraApp {
 
     // Live world rules (capacity, mutation, currents, day length)
     document.getElementById('btn-settings')?.addEventListener('click', () => this.settings.open());
+    this.abPanel = new ABPanel(this);
 
     // Portable ecosystem files
     document.getElementById('btn-export-world')?.addEventListener('click', () => {
@@ -950,6 +959,9 @@ class BiospheraApp {
     this.world.update(dt);
     this.godBrush.update(dt);
     this.dayNight.update(dt);
+
+    // Headless A/B comparison run advances alongside the live world.
+    this.abPanel?.update(dt);
 
     // Seasons drive vegetation growth & metabolism multipliers
     this.seasons.update(dt);

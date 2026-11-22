@@ -4,6 +4,7 @@
 
 import { DNA } from '../genetics/DNA.js';
 import { wrapDelta, wrapCoord } from '../engine/wrapDelta.js';
+import { simRandom } from '../engine/rng.js';
 
 export class Organism {
   constructor(x, y, dna, generation = 1, parentId = null, initialEnergy = 90) {
@@ -16,7 +17,7 @@ export class Organism {
     this.y = y;
     this.vx = 0;
     this.vy = 0;
-    this.heading = Math.random() * Math.PI * 2;
+    this.heading = simRandom() * Math.PI * 2;
     this.radius = this.dna.size;
 
     this.energy = initialEnergy;
@@ -187,7 +188,7 @@ export class Organism {
   }
 
   mateWith(partner, env = {}) {
-    const cooldown = 9.0 + Math.random() * 4.0;
+    const cooldown = 9.0 + simRandom() * 4.0;
     this.reproduceCooldown = cooldown;
     partner.reproduceCooldown = cooldown;
 
@@ -203,7 +204,7 @@ export class Organism {
       Math.min(1, 0.25 * (env.mutationScale ?? 1))
     );
     const spawnDist = this.radius + childDNA.size + 4;
-    const angle = Math.random() * Math.PI * 2;
+    const angle = simRandom() * Math.PI * 2;
     const childX = wrapCoord(this.x + Math.cos(angle) * spawnDist, env.width);
     const childY = wrapCoord(this.y + Math.sin(angle) * spawnDist, env.height);
 
@@ -367,7 +368,7 @@ export class Organism {
           // bite for free and outcompete pure herbivores, who cannot bite back.
           const absorbed = biteDmg * 0.7 * Math.max(0.3, this.dna.diet + 0.5);
           this.energy = Math.min(this.maxEnergy, this.energy + absorbed - biteDmg * 0.12);
-          this.biteCooldown = 0.5 + Math.random() * 0.3;
+          this.biteCooldown = 0.5 + simRandom() * 0.3;
 
           if (other.energy <= 0) {
             other.isDead = true;
@@ -381,7 +382,7 @@ export class Organism {
   }
 
   reproduce(env = {}) {
-    this.reproduceCooldown = 8.0 + Math.random() * 4.0; // 8-12 seconds cooldown
+    this.reproduceCooldown = 8.0 + simRandom() * 4.0; // 8-12 seconds cooldown
     const scale = env.mutationScale ?? 1;
     const childDNA = this.dna.mutate(Math.min(1, 0.08 * scale), Math.min(1, 0.25 * scale));
     const share = Math.min(0.45, Math.max(0.3, this.dna.gestationShare));
@@ -390,7 +391,7 @@ export class Organism {
     this.energy = Math.min(this.energy * (1 - share) * 0.85, this.dna.reproduceThreshold * 0.7);
     this.childrenCount++;
 
-    const spawnAngle = this.heading + Math.PI + (Math.random() - 0.5) * 0.8;
+    const spawnAngle = this.heading + Math.PI + (simRandom() - 0.5) * 0.8;
     const spawnDist = this.radius + childDNA.size + 4;
     const childX = wrapCoord(this.x + Math.cos(spawnAngle) * spawnDist, env.width);
     const childY = wrapCoord(this.y + Math.sin(spawnAngle) * spawnDist, env.height);

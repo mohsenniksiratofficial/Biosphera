@@ -4,11 +4,13 @@
  * adding environmental pressure organisms must adapt to.
  */
 
+import { simRandom } from './rng.js';
+
 export class FlowField {
   constructor(width = 2400, height = 1800) {
     this.width = width;
     this.height = height;
-    this.time = Math.random() * 100;
+    this.time = simRandom() * 100;
   }
 
   update(dt) {

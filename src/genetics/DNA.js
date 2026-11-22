@@ -3,24 +3,25 @@
  */
 
 import { NeuralNet, DEFAULT_BRAIN_TOPOLOGY } from '../brain/NeuralNet.js';
+import { simRandom } from '../engine/rng.js';
 
 export class DNA {
   constructor(params = {}) {
-    this.size = params.size ?? (8 + Math.random() * 8);
-    this.speed = params.speed ?? (2.0 + Math.random() * 2.0);
-    this.sensorRange = params.sensorRange ?? (100 + Math.random() * 120);
-    this.sensorFov = params.sensorFov ?? (Math.PI * 0.8 + (Math.random() - 0.5) * 0.6);
-    this.colorHue = params.colorHue ?? Math.floor(Math.random() * 360);
-    this.diet = params.diet ?? (Math.random() * 2 - 1); // -1: herbivore, +1: carnivore
-    this.reproduceThreshold = params.reproduceThreshold ?? (140 + Math.random() * 60);
-    this.gestationShare = params.gestationShare ?? (0.45 + Math.random() * 0.1);
+    this.size = params.size ?? (8 + simRandom() * 8);
+    this.speed = params.speed ?? (2.0 + simRandom() * 2.0);
+    this.sensorRange = params.sensorRange ?? (100 + simRandom() * 120);
+    this.sensorFov = params.sensorFov ?? (Math.PI * 0.8 + (simRandom() - 0.5) * 0.6);
+    this.colorHue = params.colorHue ?? Math.floor(simRandom() * 360);
+    this.diet = params.diet ?? (simRandom() * 2 - 1); // -1: herbivore, +1: carnivore
+    this.reproduceThreshold = params.reproduceThreshold ?? (140 + simRandom() * 60);
+    this.gestationShare = params.gestationShare ?? (0.45 + simRandom() * 0.1);
     this.brain = params.brain ?? new NeuralNet(DEFAULT_BRAIN_TOPOLOGY);
   }
 
   mutate(rate = 0.08, power = 0.25) {
     const mutateNum = (val, min, max, prob = rate) => {
-      if (Math.random() < prob) {
-        const delta = (Math.random() * 2 - 1) * (max - min) * 0.12 * (power / 0.25);
+      if (simRandom() < prob) {
+        const delta = (simRandom() * 2 - 1) * (max - min) * 0.12 * (power / 0.25);
         return Math.max(min, Math.min(max, val + delta));
       }
       return val;
@@ -30,8 +31,8 @@ export class DNA {
     newBrain.mutate(rate, power);
 
     let newHue = this.colorHue;
-    if (Math.random() < rate * 2) {
-      newHue = (this.colorHue + (Math.random() * 40 - 20) + 360) % 360;
+    if (simRandom() < rate * 2) {
+      newHue = (this.colorHue + (simRandom() * 40 - 20) + 360) % 360;
     }
 
     return new DNA({
@@ -52,17 +53,17 @@ export class DNA {
    * inherits whole neurons (weight rows) from a single parent to keep circuits coherent.
    */
   static crossover(a, b) {
-    const pick = (va, vb) => (Math.random() < 0.5 ? va : vb);
+    const pick = (va, vb) => (simRandom() < 0.5 ? va : vb);
 
     let brain;
     if (a.brain.topology.inputs === b.brain.topology.inputs &&
         a.brain.topology.outputs === b.brain.topology.outputs) {
       const weights = a.brain.weights.map((layer, l) =>
-        layer.map((_, j) => (Math.random() < 0.5 ? a.brain.weights[l][j] : b.brain.weights[l][j]))
+        layer.map((_, j) => (simRandom() < 0.5 ? a.brain.weights[l][j] : b.brain.weights[l][j]))
           .map((row) => Float32Array.from(row))
       );
       const biases = a.brain.biases.map((layer, l) =>
-        layer.map((_, j) => (Math.random() < 0.5 ? a.brain.biases[l][j] : b.brain.biases[l][j]))
+        layer.map((_, j) => (simRandom() < 0.5 ? a.brain.biases[l][j] : b.brain.biases[l][j]))
       );
       brain = new NeuralNet(a.brain.topology, weights, biases);
     } else {

@@ -9,11 +9,20 @@ import { SpatialHash } from './SpatialHash.js';
 import { DNA } from '../genetics/DNA.js';
 import { FlowField } from './FlowField.js';
 import { PheromoneField } from './PheromoneField.js';
+import { simRandom, seedChannel, setChannel, getSeed, dropChannel } from './rng.js';
 
 export class World {
-  constructor(width = 2400, height = 1800) {
+  constructor(width = 2400, height = 1800, seed = null) {
     this.width = width;
     this.height = height;
+
+    // Each world owns an independent random stream so several worlds can
+    // be stepped interleaved (live sim + A/B comparison runs).
+    World.channelCounter = (World.channelCounter || 0) + 1;
+    this.rngChannel = `world-${World.channelCounter}`;
+    seedChannel(seed, this.rngChannel);
+    this.seed = getSeed(this.rngChannel);
+    setChannel(this.rngChannel);
 
     this.organisms = [];
     this.foods = [];
@@ -66,6 +75,14 @@ export class World {
     this.loadPreset('sanctuary');
   }
 
+  /** Wipe and rebuild the same world from a seed, keeping the current preset. */
+  restartWithSeed(seed) {
+    seedChannel(seed, this.rngChannel);
+    this.seed = getSeed(this.rngChannel);
+    setChannel(this.rngChannel);
+    this.loadPreset(this.currentPreset);
+  }
+
   _handleEat(org, type) {
     if (type === 'bite') {
       this.pheromones.deposit(org.x, org.y, 'danger', 0.4);
@@ -95,11 +112,11 @@ export class World {
         this.foodSpawnRate = 6;
         this.maxFoodCap = 180;
         for (let i = 0; i < 80; i++) {
-          this.foods.push(new Food(Math.random() * this.width, Math.random() * this.height, 'plant'));
+          this.foods.push(new Food(simRandom() * this.width, simRandom() * this.height, 'plant'));
         }
         for (let i = 0; i < 40; i++) {
-          const dna = new DNA({ diet: 0.7 + Math.random() * 0.3, speed: 3.5 });
-          this.spawnOrganismAt(Math.random() * this.width, Math.random() * this.height, dna);
+          const dna = new DNA({ diet: 0.7 + simRandom() * 0.3, speed: 3.5 });
+          this.spawnOrganismAt(simRandom() * this.width, simRandom() * this.height, dna);
         }
         break;
 
@@ -108,10 +125,10 @@ export class World {
         this.foodSpawnRate = 18;
         this.maxFoodCap = 280;
         for (let i = 0; i < 5; i++) {
-          this.hazards.push(new Hazard(Math.random() * this.width, Math.random() * this.height, 70, 50));
+          this.hazards.push(new Hazard(simRandom() * this.width, simRandom() * this.height, 70, 50));
         }
         for (let i = 0; i < 150; i++) {
-          this.foods.push(new Food(Math.random() * this.width, Math.random() * this.height, 'plant'));
+          this.foods.push(new Food(simRandom() * this.width, simRandom() * this.height, 'plant'));
         }
         this.spawnRandomPopulation(35);
         break;
@@ -122,7 +139,7 @@ export class World {
         this.maxFoodCap = 180;
         this.iceAgeTimer = 99999; // Permanent chill
         for (let i = 0; i < 100; i++) {
-          this.foods.push(new Food(Math.random() * this.width, Math.random() * this.height, 'plant'));
+          this.foods.push(new Food(simRandom() * this.width, simRandom() * this.height, 'plant'));
         }
         this.spawnRandomPopulation(25);
         break;
@@ -134,7 +151,7 @@ export class World {
         this.maxFoodCap = 260;
         this.iceAgeTimer = 0;
         for (let i = 0; i < 160; i++) {
-          this.foods.push(new Food(Math.random() * this.width, Math.random() * this.height, 'plant'));
+          this.foods.push(new Food(simRandom() * this.width, simRandom() * this.height, 'plant'));
         }
         this.hazards.push(new Hazard(this.width * 0.25, this.height * 0.35, 60, 45));
         this.hazards.push(new Hazard(this.width * 0.75, this.height * 0.65, 75, 45));
@@ -148,8 +165,8 @@ export class World {
   spawnRandomPopulation(count) {
     for (let i = 0; i < count; i++) {
       const org = new Organism(
-        Math.random() * this.width,
-        Math.random() * this.height,
+        simRandom() * this.width,
+        simRandom() * this.height,
         new DNA(),
         1
       );
@@ -167,23 +184,24 @@ export class World {
 
   addParticleBurst(x, y, color = '#3fe0d0', count = 12) {
     for (let i = 0; i < count; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const speed = 20 + Math.random() * 60;
+      const angle = simRandom() * Math.PI * 2;
+      const speed = 20 + simRandom() * 60;
       this.particles.push({
         x,
         y,
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
         color,
-        size: 1.5 + Math.random() * 2.5,
+        size: 1.5 + simRandom() * 2.5,
         alpha: 1.0,
-        decay: 1.5 + Math.random() * 2
+        decay: 1.5 + simRandom() * 2
       });
     }
   }
 
   update(rawDt) {
     if (this.isPaused) return;
+    setChannel(this.rngChannel);
 
     // Fixed-step integration: scaled time is split into <=1/30s substeps so speed
     // multipliers advance the whole simulation (movement included) without letting
@@ -225,16 +243,16 @@ export class World {
     // 3. SPAWN VEGETATION (rate scaled by the season cycle)
     if ((this.currentPreset === 'glacial' || this.iceAgeTimer <= 0) && this.foods.length < this.maxFoodCap) {
       const effectiveRate = this.foodSpawnRate * this.foodRateMultiplier;
-      const toSpawn = Math.floor(effectiveRate * dt + (Math.random() < (effectiveRate * dt % 1) ? 1 : 0));
+      const toSpawn = Math.floor(effectiveRate * dt + (simRandom() < (effectiveRate * dt % 1) ? 1 : 0));
       for (let i = 0; i < toSpawn; i++) {
-        const cluster = Math.random() < 0.6 && this.foods.length > 0;
-        let fx = Math.random() * this.width;
-        let fy = Math.random() * this.height;
+        const cluster = simRandom() < 0.6 && this.foods.length > 0;
+        let fx = simRandom() * this.width;
+        let fy = simRandom() * this.height;
 
         if (cluster) {
-          const pivot = this.foods[Math.floor(Math.random() * this.foods.length)];
-          const angle = Math.random() * Math.PI * 2;
-          const dist = 10 + Math.random() * 80;
+          const pivot = this.foods[Math.floor(simRandom() * this.foods.length)];
+          const angle = simRandom() * Math.PI * 2;
+          const dist = 10 + simRandom() * 80;
           fx = (pivot.x + Math.cos(angle) * dist + this.width) % this.width;
           fy = (pivot.y + Math.sin(angle) * dist + this.height) % this.height;
         }
@@ -305,8 +323,8 @@ export class World {
         if (this.foods.length < this.maxFoodCap) {
           const meatCount = org.radius > 16 ? 2 : 1;
           for (let m = 0; m < meatCount; m++) {
-            const dropX = (org.x + (Math.random() - 0.5) * 15 + this.width) % this.width;
-            const dropY = (org.y + (Math.random() - 0.5) * 15 + this.height) % this.height;
+            const dropX = (org.x + (simRandom() - 0.5) * 15 + this.width) % this.width;
+            const dropY = (org.y + (simRandom() - 0.5) * 15 + this.height) % this.height;
             this.foods.push(new Food(dropX, dropY, 'meat', 35));
             this.pheromones.deposit(dropX, dropY, 'food', 0.6);
           }
@@ -359,7 +377,7 @@ export class World {
   triggerFoodSurge() {
     const toAdd = Math.max(0, Math.min(60, this.maxFoodCap - this.foods.length));
     for (let i = 0; i < toAdd; i++) {
-      this.foods.push(new Food(Math.random() * this.width, Math.random() * this.height, 'plant'));
+      this.foods.push(new Food(simRandom() * this.width, simRandom() * this.height, 'plant'));
     }
     this.onEvent?.('eat');
     return toAdd;
@@ -378,9 +396,9 @@ export class World {
   }
 
   triggerToxicBloom() {
-    const rx = Math.random() * this.width;
-    const ry = Math.random() * this.height;
-    this.hazards.push(new Hazard(rx, ry, 70 + Math.random() * 40, 50));
+    const rx = simRandom() * this.width;
+    const ry = simRandom() * this.height;
+    this.hazards.push(new Hazard(rx, ry, 70 + simRandom() * 40, 50));
     if (this.hazards.length > 6) {
       this.hazards.shift();
     }
