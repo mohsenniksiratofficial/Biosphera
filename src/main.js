@@ -937,8 +937,14 @@ class BiospheraApp {
       this.records.update(this.world, currentTime);
     }
 
-    // Record population history in chart
-    this.chart.record(stats, currentTime);
+    // Record population history in chart (with genetic averages for CSV export)
+    this.chart.record(stats, currentTime, {
+      avgSize: orgs.length ? orgs.reduce((s, o) => s + o.dna.size, 0) / orgs.length : null,
+      avgSpeed: orgs.length ? orgs.reduce((s, o) => s + o.dna.speed, 0) / orgs.length : null,
+      avgVision: orgs.length ? orgs.reduce((s, o) => s + o.dna.sensorRange, 0) / orgs.length : null,
+      avgDiet: orgs.length ? orgs.reduce((s, o) => s + o.dna.diet, 0) / orgs.length : null,
+      avgGeneration: orgs.length ? orgs.reduce((s, o) => s + o.generation, 0) / orgs.length : null
+    });
 
     // 1. Simulation Step & Circadian Cycle
     this.world.update(dt);

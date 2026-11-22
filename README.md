@@ -136,6 +136,16 @@ npm run build     # writes dist/ with hashed assets and a copy of sw.js
 npm run preview
 ```
 
+### Tests
+
+The simulation core runs headless in Node — no browser needed:
+
+```bash
+npm test          # node --test: 21 tests across physics, genetics, ecology, world I/O and UI
+```
+
+CI (`.github/workflows/ci.yml`) runs tests + build on every push and pull request, and deploys `dist/` to GitHub Pages on main.
+
 ---
 
 ## 🎮 Controls & Hotkeys

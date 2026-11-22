@@ -3,6 +3,10 @@
  * Visualizes Lotka-Volterra predator-prey oscillations and food balance over time.
  */
 
+function fmt(v) {
+  return v == null || !Number.isFinite(v) ? '' : (+v).toFixed(2);
+}
+
 export class PopulationChart {
   constructor(canvasId, maxHistory = 140) {
     this.canvas = document.getElementById(canvasId);
@@ -13,7 +17,7 @@ export class PopulationChart {
     this.lastRecordTime = 0;
   }
 
-  record(stats, now) {
+  record(stats, now, genetics = {}) {
     if (!this.canvas || now - this.lastRecordTime < 600) return; // Sample every 600ms
     this.lastRecordTime = now;
 
@@ -24,7 +28,8 @@ export class PopulationChart {
       omnivores: stats.omnivores,
       // Scaled series for the chart; raw plant count kept for CSV export
       food: Math.min(stats.population * 2.5, stats.foodCount * 0.4),
-      plants: stats.foodCount
+      plants: stats.foodCount,
+      ...genetics
     });
 
     if (this.history.length > this.maxHistory) {
@@ -42,14 +47,21 @@ export class PopulationChart {
     }
   }
 
-  /** Population history as CSV, with a relative time axis in seconds. */
+  /** Population + genetic averages as CSV, with a relative time axis in seconds. */
   csv() {
     if (!this.canvas || this.history.length === 0) return null;
     const t0 = this.history[0].t;
-    const rows = ['time_s,herbivores,carnivores,omnivores,plants'];
+    const hasGenetics = 'avgSize' in this.history[0];
+    const header = hasGenetics
+      ? 'time_s,herbivores,carnivores,omnivores,plants,avg_size,avg_speed,avg_vision,avg_diet,avg_generation'
+      : 'time_s,herbivores,carnivores,omnivores,plants';
+    const rows = [header];
     for (const pt of this.history) {
       const time = ((pt.t - t0) / 1000).toFixed(1);
-      rows.push(`${time},${pt.herbivores},${pt.carnivores},${pt.omnivores},${pt.plants ?? ''}`);
+      const pop = `${time},${pt.herbivores},${pt.carnivores},${pt.omnivores},${pt.plants ?? ''}`;
+      rows.push(hasGenetics
+        ? `${pop},${fmt(pt.avgSize)},${fmt(pt.avgSpeed)},${fmt(pt.avgVision)},${fmt(pt.avgDiet)},${fmt(pt.avgGeneration)}`
+        : pop);
     }
     return rows.join('\n');
   }
