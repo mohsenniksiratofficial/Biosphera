@@ -45,6 +45,7 @@ class BiospheraApp {
     this.seasons = new SeasonCycle(75);
     this.species = new SpeciesRegistry();
     this.records = new HallOfFame();
+    this.abPanel = null; // created after the world, in initUI
     this.lastAutosave = performance.now();
 
     // 2. World & Camera
@@ -947,12 +948,13 @@ class BiospheraApp {
     }
 
     // Record population history in chart (with genetic averages for CSV export)
+    const wOrgs = this.world.organisms;
     this.chart.record(stats, currentTime, {
-      avgSize: orgs.length ? orgs.reduce((s, o) => s + o.dna.size, 0) / orgs.length : null,
-      avgSpeed: orgs.length ? orgs.reduce((s, o) => s + o.dna.speed, 0) / orgs.length : null,
-      avgVision: orgs.length ? orgs.reduce((s, o) => s + o.dna.sensorRange, 0) / orgs.length : null,
-      avgDiet: orgs.length ? orgs.reduce((s, o) => s + o.dna.diet, 0) / orgs.length : null,
-      avgGeneration: orgs.length ? orgs.reduce((s, o) => s + o.generation, 0) / orgs.length : null
+      avgSize: wOrgs.length ? wOrgs.reduce((s, o) => s + o.dna.size, 0) / wOrgs.length : null,
+      avgSpeed: wOrgs.length ? wOrgs.reduce((s, o) => s + o.dna.speed, 0) / wOrgs.length : null,
+      avgVision: wOrgs.length ? wOrgs.reduce((s, o) => s + o.dna.sensorRange, 0) / wOrgs.length : null,
+      avgDiet: wOrgs.length ? wOrgs.reduce((s, o) => s + o.dna.diet, 0) / wOrgs.length : null,
+      avgGeneration: wOrgs.length ? wOrgs.reduce((s, o) => s + o.generation, 0) / wOrgs.length : null
     });
 
     // 1. Simulation Step & Circadian Cycle

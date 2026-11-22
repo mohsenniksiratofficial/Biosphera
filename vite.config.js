@@ -19,6 +19,10 @@ import { resolve } from 'node:path';
  */
 export default defineConfig({
   base: './',
+  server: {
+    host: true,
+    allowedHosts: true
+  },
   build: {
     target: 'es2020'
   },
